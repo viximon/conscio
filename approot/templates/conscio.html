@@ -1,0 +1,168 @@
+{% extends "base.html" %}
+
+{% block title %}Conscio{% endblock %}
+
+{% block style_extra %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap-switch.min.css') }}">
+{% endblock style_extra %}
+
+{% block script_extra %}
+<script src="{{ url_for('static', filename='js/bootstrap-switch.min.js') }}"></script>
+<script>
+$(function () {
+  // Initialize
+  $.fn.bootstrapSwitch.defaults.size = 'small';
+  $("[name='sw_ip']").bootstrapSwitch();
+  $("[name='sw_do']").bootstrapSwitch();
+  $("[name='sw_rw']").bootstrapSwitch();
+
+  // For every task's attribute toggled, call API,
+  // Method 1: and update client table with response from server.
+  // Method 2: update without waiting for server response. If go with this method,
+  // should carefully consider consistency between client-client and client-server.)
+
+  // Method 1
+  function get_id(str) {
+    return str.substring(str.lastIndexOf('_') + 1);
+  }
+
+  function call_api(post_data, callback) {
+    $.ajax({
+      url: '/api/conscio/', //+ "{{ request.view_args.get('table_id') }}",
+      contentType: 'application/json;charset=UTF-8',
+      type: 'POST',
+      data: JSON.stringify(post_data),
+      dataType: 'json',
+      success: function (response) {
+        console.log('Success callback.');
+        callback(response);
+      }
+    });
+  }
+
+  $("input[name='sw_ip']").on('switchChange.bootstrapSwitch', function (event, state) {
+    var post_data = {
+      "switch_name": this.name,
+      "task_id": get_id(this.id),
+      "state": state,
+    };
+    call_api(post_data, function (response) {
+      console.log("Response: " + response);
+      var key;
+      for (key in response) {
+        var task = response[key];
+        $('#sw_ip_' + task.task_id).bootstrapSwitch('state', task.in_progress, true); // third param is skip
+      }
+    });
+  });
+  $("input[name='sw_do']").on('switchChange.bootstrapSwitch', function (event, state) {
+    var post_data = {
+      "switch_name": this.name,
+      "task_id": get_id(this.id),
+      "state": state,
+    };
+    call_api(post_data, function (response) {
+      console.log("Response: " + response);
+    });
+  });
+  $("input[name='sw_rw']").on('switchChange.bootstrapSwitch', function (event, state) {
+    var post_data = {
+      "switch_name": this.name,
+      "task_id": get_id(this.id),
+      "state": state,
+    };
+    call_api(post_data, function (response) {
+      console.log("Response: " + response);
+    });
+  });
+
+  // Add a new task
+  $("#new_task_rw").bootstrapSwitch();
+  $("#new_task_name").on("input",function(e){
+    if($(this).val() != ""){
+      $("#btn_new_task").removeAttr("disabled");
+    } else {
+      $("#btn_new_task").attr("disabled", "disabled");
+    }
+  });
+  $("#btn_new_task").click(function() {
+    var task = {
+      "name": $("#new_task_name").val(),
+      "real_work": $("#new_task_rw").bootstrapSwitch('state'),
+      "due_date": $("#new_task_due").val(),
+    }
+    console.log("Post data: " + task);
+    call_api(task, function (response) {
+      console.log("Response: " + response.status);
+      // Method 1: Rerender whole table
+      // Method 2: If ok, add new line to top of table
+
+      // Method 1:
+      if (response.status == "OK") {
+        location.reload();
+      }
+    });
+  });
+
+  // Delete a task
+  $("button[name='btn_del_task']").click(function() {
+    var task_id = get_id(this.id);
+    $.ajax({
+      url: '/api/conscio/' + task_id,
+      type: 'DELETE',
+      dataType: 'json',
+      success: function (response) {
+        console.log('Response: ' + response.status);
+        if (response.status == "OK") {
+          location.reload();
+        }
+      }
+    });
+  });
+
+});
+</script>
+{% endblock script_extra%}
+
+{% block content %}
+<h2>Conscio v0.4</h2>
+<table class="table">
+  <tr>
+    <th>ID</th>
+    <th>Tasks</th>
+    <th>In Progress</th>
+    <th>Done</th>
+    <th>Real work?</th>
+    <th>Due</th>
+    <th></th>
+  </tr>
+  <tr>
+    <td>&mdash;</td>
+    <td><input id="new_task_name" type="text" placeholder="new task" class="new_task_box"/></td>
+    <td>&mdash;</td>
+    <td>&mdash;</td>
+    <td><input id="new_task_rw" type="checkbox" name="new_task_sw_rw" checked="true"/></td>
+    <td><input id="new_task_due" type="text" class="new_task_box"/></td>
+    <td><button id="btn_new_task" class="btn btn-success btn-xs" disabled="disabled">+</button></td>
+  </tr>
+  {% for task in tasks %}
+  <tr>
+    <td>{{ task.task_id }}</td>
+    <td>{{ task.name }}</td>
+    <td>
+      <input id="{{ 'sw_ip_' + task.task_id|string }}" type="checkbox" name="sw_ip" {% if task.in_progress %}checked="true"{% endif %}>
+    </td>
+    <td>
+      <input id="{{ 'sw_do_' + task.task_id|string }}" type="checkbox" name="sw_do" {% if task.done %}checked="true"{% endif %}>
+    </td>
+    <td>
+      <input id="{{ 'sw_rw_' + task.task_id|string }}" type="checkbox" name="sw_rw" {% if task.real_work %}checked="true"{% endif %}>
+    </td>
+    <td>{{ task.due_date if task.due_date != None }}</td>
+    <td><button id="{{ 'btn_del_task_' + task.task_id|string }}" name="btn_del_task" class="btn btn-xs btn-danger">&ndash;</button></td>
+  </tr>
+  {% endfor %}
+</table>
+
+{% endblock content%}
+

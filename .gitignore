@@ -1,0 +1,8 @@
+*~
+*.pyc
+/env
+*.log
+/logs
+/approot/config.py
+/bin/init_dev_db.sh
+

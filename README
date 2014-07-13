@@ -1,0 +1,19 @@
+Conscio v0.4
+==============
+
+Todo List with Time Recording
+
+
+
+Quick start - set up development environment
+- Clone this repo
+- cd into project root
+- $ source bin/init_env.sh
+- $ cp approot/config.py.template approot/config.py
+- Modify approot/config.py as neccessary
+- $ bin/manage.py populate_demo_data
+
+
+Run local server
+- $ bin/manage.py runserver
+  Optional argument: --config or -c [development|production|test]
