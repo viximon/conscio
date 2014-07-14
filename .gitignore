@@ -1,7 +1,9 @@
 *~
 *.pyc
-/env
 *.log
+.coverage
+/codereport
+/env
 /logs
 /approot/config.py
 /bin/init_dev_db.sh
