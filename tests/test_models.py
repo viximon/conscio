@@ -4,10 +4,10 @@ from tests import BaseTest
 
 class TestModels(BaseTest):
     def test_simple(self):
-        assert User.query.count() == 1
-        assert User.query.get(1).username == 'demo'
-        assert Task.query.get(1).user.username == 'demo'
-        assert Task.query.count() == 2
+        self.assertTrue(User.query.count() == 1)
+        self.assertTrue(User.query.get(1).username == 'demo')
+        self.assertTrue(Task.query.get(1).user.username == 'demo')
+        self.assertTrue(Task.query.count() == 2)
 
 
 class TestTaskManager(BaseTest):
@@ -21,9 +21,10 @@ class TestTaskManager(BaseTest):
         self.tm.add(task)
 
         expected_id = Task.query.count()
-        assert self.tm.get_by_id(expected_id).name == 'new test task'
+        self.assertTrue(self.tm.get_by_id(expected_id).name == 'new test task')
 
     def test_delete_by_id(self):
         # Happy path
         self.tm.delete_by_id(1)
-        assert self.tm.get_by_id(1) == None
+        self.assertTrue(False)
+        self.assertTrue(self.tm.get_by_id(1) == None)
