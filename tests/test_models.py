@@ -26,5 +26,4 @@ class TestTaskManager(BaseTest):
     def test_delete_by_id(self):
         # Happy path
         self.tm.delete_by_id(1)
-        self.assertTrue(False)
         self.assertTrue(self.tm.get_by_id(1) == None)
